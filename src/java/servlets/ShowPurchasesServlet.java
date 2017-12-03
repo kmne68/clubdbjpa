@@ -6,9 +6,11 @@
 package servlets;
 
 import business.Member;
-import business.MemberDB;
+import business.Purchase;
+import business.PurchaseDB;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -19,42 +21,30 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author kmne6
  */
-public class ClubLogonServlet extends HttpServlet {
+public class ShowPurchasesServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
 
+        String URL = "/MemberScreen.jsp";
         String msg = "";
-        String userid = "";
-        String URL = "/Logon.jsp";
-        Long passatt;
-        Member m;
-        
+        List<Purchase> p;
 
         try {
-            // should check validity of userid before using it
-            userid = request.getParameter("userid").trim();
-            m = MemberDB.getMemberByID(userid);
-            if (m == null) {
-                msg = "No membre record retrieved<br>";
+            Member m = (Member) request.getSession().getAttribute("m");
+            p = PurchaseDB.getPurchases(m.getMemid());
+
+            if (p == null) {
+                msg = "Purchases list returned null<br>";
             } else {
-                // msg = "Member " + m.getLastnm() + " found.";
-                passatt = Long.parseLong(request.getParameter("password").trim());
-                m.setPassattempt(passatt);
-                if(!m.isAuthenticated()) {
-                    msg = "Unable to aunthenitcate<br>";
-                } else {
-                    URL = "/MemberScreen.jsp";
-                    request.getSession().setAttribute("m", m);
-                }
+                msg = "Purchases list had " + p.size() + " entries.<br>";
             }
         } catch (Exception e) {
-            msg = "Exception: " + e.getMessage();
+            msg = "Servlet exception " + e.getMessage() + "<br>";
         }
 
         request.setAttribute("msg", msg);
-
         RequestDispatcher disp = getServletContext().getRequestDispatcher(URL);
         disp.forward(request, response);
     }
